@@ -1,5 +1,4 @@
-//without side bar
-
+// src/components/JoinInterviewTwo.jsx
 import React, { useState, useEffect } from 'react';
 import { Users } from 'lucide-react';
 import VideoChat from './VideoChat';
