@@ -269,12 +269,47 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
 
     const peerConnection = new RTCPeerConnection({
       iceServers: [
-        {
-          urls: "turn:62.146.178.245:3478",
-          username: "test",
-          credential: "test123",
-        },
-      ],
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun2.l.google.com:19302' },
+  { urls: 'stun:stun.services.mozilla.com' }
+],
+
+
+      // iceServers: [
+      //   {
+      //     urls: "turn:62.146.178.245:3478",
+      //     username: "test",
+      //     credential: "test123",
+      //   },
+      // ],
+      
+
+  //     iceServers: [
+  //     {
+  //       urls: "stun:stun.relay.metered.ca:80",
+  //     },
+  //     {
+  //       urls: "turn:global.relay.metered.ca:80",
+  //       username: "a8fb3acda1af41de6ab0ca11",
+  //       credential: "d0p4sNOwlc+RAsJu",
+  //     },
+  //     {
+  //       urls: "turn:global.relay.metered.ca:80?transport=tcp",
+  //       username: "a8fb3acda1af41de6ab0ca11",
+  //       credential: "d0p4sNOwlc+RAsJu",
+  //     },
+  //     {
+  //       urls: "turn:global.relay.metered.ca:443",
+  //       username: "a8fb3acda1af41de6ab0ca11",
+  //       credential: "d0p4sNOwlc+RAsJu",
+  //     },
+  //     {
+  //       urls: "turns:global.relay.metered.ca:443?transport=tcp",
+  //       username: "a8fb3acda1af41de6ab0ca11",
+  //       credential: "d0p4sNOwlc+RAsJu",
+  //     },
+  // ],
     });
 
     pendingCandidates.current[peerId] = [];
