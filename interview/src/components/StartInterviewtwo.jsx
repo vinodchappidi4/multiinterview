@@ -1,10 +1,6 @@
-
 // src/components/StartInterviewtwo.jsx
-
-//updated control panel UI
-
 import React, { useState, useEffect } from 'react';
-import { UserX, Users } from 'lucide-react';
+import { UserX, Users, Mic, MicOff, Video, VideoOff, Volume2, VolumeX, Settings, Share2, Copy } from 'lucide-react';
 import VideoChat from './VideoChat';
 
 export default function StartInterviewTwo() {
@@ -13,6 +9,10 @@ export default function StartInterviewTwo() {
   const [ipAddress, setIpAddress] = useState('');
   const [participants, setParticipants] = useState(new Map());
   const [selectedParticipant, setSelectedParticipant] = useState(null);
+  const [participantControls, setParticipantControls] = useState(new Map());
+  const [isAllMuted, setIsAllMuted] = useState(false);
+  const [isAllVideoOff, setIsAllVideoOff] = useState(false);
+  const [showCopyTooltip, setShowCopyTooltip] = useState(false);
 
   useEffect(() => {
     fetch('/api/get-ip')
@@ -29,43 +29,124 @@ export default function StartInterviewTwo() {
     }
   };
 
+  const handleMediaStateChange = (participantId, type, enabled) => {
+    setParticipantControls(prev => {
+      const newControls = new Map(prev);
+      const currentControls = newControls.get(participantId) || { mic: true, camera: true };
+      newControls.set(participantId, { ...currentControls, [type]: enabled });
+      return newControls;
+    });
+  };
+
   const handleParticipantsUpdate = (newParticipants) => {
     setParticipants(newParticipants);
+    newParticipants.forEach((name, id) => {
+      if (name !== 'Interviewer' && !participantControls.has(id)) {
+        setParticipantControls(prev => {
+          const newControls = new Map(prev);
+          if (!newControls.has(id)) {
+            newControls.set(id, { mic: true, camera: true });
+          }
+          return newControls;
+        });
+      }
+    });
   };
 
   const handleRemoveParticipant = (participantId) => {
     setSelectedParticipant(participantId);
+    setParticipantControls(prev => {
+      const newControls = new Map(prev);
+      newControls.delete(participantId);
+      return newControls;
+    });
+  };
+
+  const handleToggleMic = (participantId) => {
+    const currentControls = participantControls.get(participantId);
+    if (currentControls) {
+      const newEnabled = !currentControls.mic;
+      handleMediaStateChange(participantId, 'mic', newEnabled);
+    }
+  };
+
+  const handleToggleCamera = (participantId) => {
+    const currentControls = participantControls.get(participantId);
+    if (currentControls) {
+      const newEnabled = !currentControls.camera;
+      handleMediaStateChange(participantId, 'camera', newEnabled);
+    }
+  };
+
+  const handleToggleAllMics = () => {
+    const newMuteState = !isAllMuted;
+    setIsAllMuted(newMuteState);
+    
+    const newControls = new Map(participantControls);
+    Array.from(participants.entries())
+      .filter(([_, name]) => name !== 'Interviewer')
+      .forEach(([id]) => {
+        const currentControls = newControls.get(id) || { mic: true, camera: true };
+        newControls.set(id, { ...currentControls, mic: !newMuteState });
+        handleMediaStateChange(id, 'mic', !newMuteState);
+      });
+    setParticipantControls(newControls);
+  };
+
+  const handleToggleAllCameras = () => {
+    const newVideoState = !isAllVideoOff;
+    setIsAllVideoOff(newVideoState);
+    
+    const newControls = new Map(participantControls);
+    Array.from(participants.entries())
+      .filter(([_, name]) => name !== 'Interviewer')
+      .forEach(([id]) => {
+        const currentControls = newControls.get(id) || { mic: true, camera: true };
+        newControls.set(id, { ...currentControls, camera: !newVideoState });
+        handleMediaStateChange(id, 'camera', !newVideoState);
+      });
+    setParticipantControls(newControls);
   };
 
   const getParticipantCount = () => {
-    const count = Array.from(participants.entries()).filter(([_, name]) => name !== 'Interviewer').length;
-    return count;
+    return Array.from(participants.entries()).filter(([_, name]) => name !== 'Interviewer').length;
+  };
+
+  const copyRoomId = () => {
+    navigator.clipboard.writeText(roomId);
+    setShowCopyTooltip(true);
+    setTimeout(() => setShowCopyTooltip(false), 2000);
   };
 
   if (!interviewStarted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-          <h1 className="text-2xl font-bold mb-6 text-gray-800">Start Interview</h1>
-          <div className="space-y-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Start Interview</h1>
+            <p className="text-gray-600">Enter a room ID to start your interview session</p>
+          </div>
+          <div className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="roomId" className="block text-sm font-medium text-gray-700">
                 Room ID
               </label>
-              <input
-                id="roomId"
-                type="text"
-                value={roomId}
-                onChange={(e) => setRoomId(e.target.value)}
-                placeholder="Enter Room ID"
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-              />
+              <div className="relative">
+                <input
+                  id="roomId"
+                  type="text"
+                  value={roomId}
+                  onChange={(e) => setRoomId(e.target.value)}
+                  placeholder="Enter Room ID"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                />
+              </div>
             </div>
             <button
               onClick={startInterview}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
             >
-              Start Interview
+              <span>Start Interview</span>
             </button>
           </div>
         </div>
@@ -74,8 +155,7 @@ export default function StartInterviewTwo() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Main Content Area */}
+    <div className="flex h-screen bg-gray-50">
       <div className="flex-1 overflow-hidden">
         <VideoChat
           roomId={roomId}
@@ -84,69 +164,150 @@ export default function StartInterviewTwo() {
           onParticipantsUpdate={handleParticipantsUpdate}
           onRemoveParticipant={handleRemoveParticipant}
           selectedParticipant={selectedParticipant}
+          participantControls={participantControls}
+          onMediaStateChange={handleMediaStateChange}
         />
       </div>
+      <div className="w-96 bg-white border-l border-gray-200 h-full flex flex-col shadow-lg">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Interview Controls</h2>
+            <div className="flex items-center text-sm font-medium text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
+              <Users size={16} className="mr-2" />
+              <span>{getParticipantCount()} Participant{getParticipantCount() !== 1 ? 's' : ''}</span>
+            </div>
+          </div>
+          
+          <div className="relative">
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg mb-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <p className="text-sm font-medium text-blue-900">Room ID: {roomId}</p>
+              </div>
+              <button
+                onClick={copyRoomId}
+                className="text-blue-600 hover:text-blue-700 transition-colors"
+                title="Copy Room ID"
+              >
+                <Copy size={18} />
+              </button>
+            </div>
+            {showCopyTooltip && (
+              <div className="absolute top-0 right-0 mt-12 bg-gray-800 text-white text-sm py-1 px-3 rounded shadow-lg">
+                Copied!
+              </div>
+            )}
+          </div>
 
-      {/* Right Sidebar */}
-      <div className="w-80 bg-white border-l border-gray-200 h-full flex flex-col">
-        {/* Sidebar Header */}
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-800">Interview Controls</h2>
-          <div className="mt-2 flex items-center text-sm text-gray-600">
-            <Users size={16} className="mr-2" />
-            <span>{getParticipantCount()} Participant{getParticipantCount() !== 1 ? 's' : ''}</span>
-          </div>
-          <div className="mt-2 px-3 py-1 bg-blue-50 rounded-md">
-            <p className="text-sm text-blue-800">Room ID: {roomId}</p>
-          </div>
+          {getParticipantCount() > 0 && (
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={handleToggleAllMics}
+                className={`flex-1 flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isAllMuted
+                    ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                    : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                }`}
+              >
+                {isAllMuted ? (
+                  <>
+                    <VolumeX size={18} className="mr-2" />
+                    All Muted
+                  </>
+                ) : (
+                  <>
+                    <Volume2 size={18} className="mr-2" />
+                    Mute All
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleToggleAllCameras}
+                className={`flex-1 flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isAllVideoOff
+                    ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                    : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                }`}
+              >
+                {isAllVideoOff ? (
+                  <>
+                    <VideoOff size={18} className="mr-2" />
+                    All Video Off
+                  </>
+                ) : (
+                  <>
+                    <Video size={18} className="mr-2" />
+                    Disable All Video
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Participants List */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="space-y-2">
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="space-y-3">
             {Array.from(participants.entries()).filter(([_, name]) => name !== 'Interviewer').length > 0 ? (
               Array.from(participants.entries()).map(([id, name]) => (
                 name !== 'Interviewer' && (
                   <div
                     key={id}
-                    className={`group relative rounded-lg border ${
+                    className={`group rounded-xl border ${
                       selectedParticipant === id
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-blue-200 hover:bg-blue-50'
-                    } transition-colors`}
+                    } transition-all duration-200 shadow-sm`}
                   >
                     <div className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">{name}</h3>
-                          <p className="text-sm text-gray-500 mt-1">Participant</p>
+                          <h3 className="font-semibold text-gray-900">{name}</h3>
+                          <p className="text-sm text-gray-500 mt-0.5">Participant</p>
                         </div>
-                        <button
-                          onClick={() => handleRemoveParticipant(id)}
-                          className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-100 rounded-full text-red-500 transition-all"
-                          title="Remove participant"
-                        >
-                          <UserX size={20} />
-                        </button>
+                        <div className="flex items-center space-x-1">
+                          <button
+                            onClick={() => handleToggleMic(id)}
+                            className={`p-2 rounded-lg transition-all duration-200 ${
+                              participantControls.get(id)?.mic
+                                ? 'text-blue-500 hover:bg-blue-100'
+                                : 'text-red-500 hover:bg-red-100'
+                            }`}
+                            title={participantControls.get(id)?.mic ? 'Mute participant' : 'Unmute participant'}
+                          >
+                            {participantControls.get(id)?.mic ? <Mic size={20} /> : <MicOff size={20} />}
+                          </button>
+                          <button
+                            onClick={() => handleToggleCamera(id)}
+                            className={`p-2 rounded-lg transition-all duration-200 ${
+                              participantControls.get(id)?.camera
+                                ? 'text-blue-500 hover:bg-blue-100'
+                                : 'text-red-500 hover:bg-red-100'
+                            }`}
+                            title={participantControls.get(id)?.camera ? 'Disable camera' : 'Enable camera'}
+                          >
+                            {participantControls.get(id)?.camera ? <Video size={20} /> : <VideoOff size={20} />}
+                          </button>
+                          <button
+                            onClick={() => handleRemoveParticipant(id)}
+                            className="p-2 rounded-lg hover:bg-red-100 text-red-500 transition-all duration-200"
+                            title="Remove participant"
+                          >
+                            <UserX size={20} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 )
               ))
             ) : (
-              <div className="text-center py-8">
-                <Users size={40} className="mx-auto text-gray-400 mb-3" />
-                <p className="text-gray-500">Waiting for participants to join...</p>
+              <div className="text-center py-12">
+                <Users size={48} className="mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-600 font-medium">Waiting for participants to join...</p>
+                <p className="text-gray-500 text-sm mt-2">Share the room ID to invite participants</p>
               </div>
             )}
           </div>
-        </div>
-
-        {/* Sidebar Footer */}
-        <div className="p-4 border-t border-gray-200">
-          <p className="text-xs text-gray-500 text-center">
-            Click on a participant card to select them
-          </p>
         </div>
       </div>
     </div>
