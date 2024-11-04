@@ -14,10 +14,10 @@ export const s3Client = new S3Client({
       // accessKeyId: "3IwS3yhDtXr7rDw3wsEi",
       // secretAccessKey: "puKrxzhT15F3V1n43qkGr8umubhSwsDT9xfCUom9",
      //serverminio
-     // accessKeyId: "QEnVf8HvfU10IXlbPpOk",
-     // secretAccessKey: "oXMtS9C3oxVobZ1JuGVU9q7PQnDSL3AzZnjJ7z5E",
+     accessKeyId: "QEnVf8HvfU10IXlbPpOk",
+     secretAccessKey: "oXMtS9C3oxVobZ1JuGVU9q7PQnDSL3AzZnjJ7z5E",
      //vinod
-     accessKeyId: "UMmgKYXAQFriWVwVcWLP",
-     secretAccessKey: "9l02BzE9nR5d9FrTqfHLW13gR6IU4n4V9fPDiPek",
+     //accessKeyId: "UMmgKYXAQFriWVwVcWLP",
+     //secretAccessKey: "9l02BzE9nR5d9FrTqfHLW13gR6IU4n4V9fPDiPek",
     },
   });
