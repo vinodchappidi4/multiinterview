@@ -13,8 +13,16 @@ function Home() {
     navigate('/fetchinterview');
   };
 
-  const handleMultiInterview = () => {
-    navigate('/multiinterview');
+  const handleStartInterviewtwo = () => {
+    navigate('/startinterviewtwo');
+  };
+
+  const handleJoinInterviewtwo = () => {
+    navigate('/joininterviewtwo');
+  };
+
+  const handleFetchMultiInterview = () => {
+    navigate('/fetchmultiinterview');
   };
 
   return (
@@ -30,8 +38,14 @@ function Home() {
           <Button variant="outlined" color="primary" size="large" fullWidth onClick={handleFetchInterview}>
             Fetch Interview
           </Button>
-          <Button variant="contained" color="primary" size="large" fullWidth onClick={handleMultiInterview}>
-            Multi Interview
+          <Button variant="contained" color="primary" size="large" fullWidth onClick={handleStartInterviewtwo}>
+            Start Interview Multi
+          </Button>
+          <Button variant="outlined" color="primary" size="large" fullWidth onClick={handleJoinInterviewtwo}>
+            Join Interview Multi
+          </Button>
+          <Button variant="contained" color="primary" size="large" fullWidth onClick={handleFetchMultiInterview}>
+            Fetch Multi Interview
           </Button>
         </Box>
       </Paper>
@@ -41,6 +55,7 @@ function Home() {
 
 export default Home;
 
+//for micro-frontend
 
 // import React from 'react';
 // import { Box, Button, Typography, Paper } from '@mui/material';
