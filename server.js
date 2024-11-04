@@ -1,29 +1,34 @@
 // server.js
 
 const express = require('express');
-const http = require('http');
+const https = require('https');
 const { Server } = require("socket.io");
 const path = require('path');
 const { Client } = require('minio');
 const fileUpload = require('express-fileupload');
+const fs = require('fs');
 
 const app = express();
-const server = http.createServer(app);
+const options = {
+    key: fs.readFileSync('/home/vinod/selfsigned.key'),
+    cert: fs.readFileSync('/home/vinod/selfsigned.crt')
+};
+const server = http.createServer(options, app);
 const io = new Server(server, {
     cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
+        origin: "https://62.146.178.245",
+        methods: ["GET", "POST"],
+        credentials: true
     }
 });
 
 // Initialize Minio Client
 const minioClient = new Client({
-    endPoint: '192.168.1.4',
-    //endPoint: '192.168.43.179',
+    endPoint: '62.146.178.245',
     port: 9000,
     useSSL: false,
-    accessKey: '3IwS3yhDtXr7rDw3wsEi',
-    secretKey: 'puKrxzhT15F3V1n43qkGr8umubhSwsDT9xfCUom9'
+    accessKey: 'QEnVf8HvfU10IXlbPpOk',
+    secretKey: 'oXMtS9C3oxVobZ1JuGVU9q7PQnDSL3AzZnjJ7z5E'
 });
 
 // Test Minio connection
