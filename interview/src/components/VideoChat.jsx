@@ -5,6 +5,8 @@ import VideoGrid from './VideoGrid';
 import { Camera, CameraOff, Mic, MicOff, Hand, MessageSquare, Monitor, MonitorOff, LogOut } from 'lucide-react';
 import RecordingButton from './RecordingButton';
 import { Chat, ChatButton } from './Chat';
+import Questions from './MultiInterviewQuestions';
+import { HelpCircle } from 'lucide-react';
 
 const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onParticipantsUpdate, onRemoveParticipant, selectedParticipant, participantControls, onMediaStateChange }) => {
   const [localStream, setLocalStream] = useState(null);
@@ -26,6 +28,7 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [screenStream, setScreenStream] = useState(null);
   const [showToolbar, setShowToolbar] = useState(null);
+  const [isQuestionsOpen, setIsQuestionsOpen] = useState(false);
 
   const handleHover = (buttonType) => {
     setShowToolbar(buttonType);
@@ -269,47 +272,12 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
 
     const peerConnection = new RTCPeerConnection({
       iceServers: [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun2.l.google.com:19302' },
-  { urls: 'stun:stun.services.mozilla.com' }
-],
-
-
-      // iceServers: [
-      //   {
-      //     urls: "turn:62.146.178.245:3478",
-      //     username: "test",
-      //     credential: "test123",
-      //   },
-      // ],
-      
-
-  //     iceServers: [
-  //     {
-  //       urls: "stun:stun.relay.metered.ca:80",
-  //     },
-  //     {
-  //       urls: "turn:global.relay.metered.ca:80",
-  //       username: "a8fb3acda1af41de6ab0ca11",
-  //       credential: "d0p4sNOwlc+RAsJu",
-  //     },
-  //     {
-  //       urls: "turn:global.relay.metered.ca:80?transport=tcp",
-  //       username: "a8fb3acda1af41de6ab0ca11",
-  //       credential: "d0p4sNOwlc+RAsJu",
-  //     },
-  //     {
-  //       urls: "turn:global.relay.metered.ca:443",
-  //       username: "a8fb3acda1af41de6ab0ca11",
-  //       credential: "d0p4sNOwlc+RAsJu",
-  //     },
-  //     {
-  //       urls: "turns:global.relay.metered.ca:443?transport=tcp",
-  //       username: "a8fb3acda1af41de6ab0ca11",
-  //       credential: "d0p4sNOwlc+RAsJu",
-  //     },
-  // ],
+        {
+          urls: "turn:62.146.178.245:3478",
+          username: "test",
+          credential: "test123",
+        },
+      ],
     });
 
     pendingCandidates.current[peerId] = [];
@@ -616,14 +584,18 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
       <div className="h-16 bg-white border-t flex items-center px-4">
         <div className="w-full max-w-7xl mx-auto flex justify-center space-x-4">
         <div className="relative group">
-            <button
-              onMouseEnter={() => handleHover('camera')}
-              onMouseLeave={handleMouseLeave}
-              onClick={toggleCamera}
-              className="flex items-center justify-center w-12 h-12 rounded-full transition-colors text-gray-600 hover:bg-blue-500 hover:text-white"
-            >
-              {isCameraOn ? <Camera size={18} /> : <CameraOff size={18} />}
-            </button>
+        <button 
+  onMouseEnter={() => handleHover('camera')} 
+  onMouseLeave={handleMouseLeave} 
+  onClick={toggleCamera} 
+  className={`flex items-center justify-center w-12 h-12 rounded-full transition-colors ${
+    isCameraOn 
+      ? 'text-gray-600 hover:bg-blue-500 hover:text-white' 
+      : 'text-red-500 bg-red-100 hover:bg-red-500 hover:text-white'
+  }`}
+>
+  {isCameraOn ? <Camera size={18} /> : <CameraOff size={18} />}
+</button>
             {showToolbar === 'camera' && (
               <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 bg-white shadow-lg rounded-md px-4 py-2 whitespace-nowrap">
                 {isCameraOn ? 'Turn Off Camera' : 'Turn On Camera'}
@@ -631,14 +603,18 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
             )}
           </div>
           <div className="relative group">
-            <button
-            onMouseEnter={() => handleHover('mic')}
-            onMouseLeave={handleMouseLeave}
-              onClick={toggleMic}
-              className="flex items-center justify-center w-12 h-12 rounded-full transition-colors text-gray-600 hover:bg-blue-500 hover:text-white"
-            >
-              {isMicOn ? <Mic size={18} /> : <MicOff size={18} />}
-            </button>
+          <button 
+  onMouseEnter={() => handleHover('mic')} 
+  onMouseLeave={handleMouseLeave} 
+  onClick={toggleMic} 
+  className={`flex items-center justify-center w-12 h-12 rounded-full transition-colors ${
+    isMicOn 
+      ? 'text-gray-600 hover:bg-blue-500 hover:text-white' 
+      : 'text-red-500 bg-red-100 hover:bg-red-500 hover:text-white'
+  }`}
+>
+  {isMicOn ? <Mic size={18} /> : <MicOff size={18} />}
+</button>
             {showToolbar === 'mic' && (
               <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 bg-white shadow-lg rounded-md px-4 py-2 whitespace-nowrap">
                 {isMicOn ? 'Mute Mic' : 'Unmute Mic'}
@@ -647,14 +623,18 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
           </div>
 
           <div className="relative group">
-            <button
-            onMouseEnter={() => handleHover('screenshare')}
-            onMouseLeave={handleMouseLeave}
-              onClick={toggleScreenShare}
-              className="flex items-center justify-center w-12 h-12 rounded-full transition-colors text-gray-600 hover:bg-blue-500 hover:text-white"
-            >
-              {isScreenSharing ? <MonitorOff size={18} /> : <Monitor size={18} />}
-            </button>
+            <button 
+  onMouseEnter={() => handleHover('screenshare')} 
+  onMouseLeave={handleMouseLeave} 
+  onClick={toggleScreenShare} 
+  className={`flex items-center justify-center w-12 h-12 rounded-full transition-colors ${
+    isScreenSharing 
+      ? 'text-green-500 bg-green-100 hover:bg-green-500 hover:text-white' 
+      : 'text-gray-600 hover:bg-blue-500 hover:text-white'
+  }`}
+>
+  {isScreenSharing ? <MonitorOff size={18} /> : <Monitor size={18} />}
+</button>
             {showToolbar === 'screenshare' && (
               <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 bg-white shadow-lg rounded-md px-4 py-2 whitespace-nowrap">
                 {isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
@@ -663,14 +643,18 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
           </div>
 
           <div className="relative group">
-            <button
-            onMouseEnter={() => handleHover('hand')}
-            onMouseLeave={handleMouseLeave}
-              onClick={toggleHand}
-              className="flex items-center justify-center w-12 h-12 rounded-full transition-colors text-gray-600 hover:bg-yellow-500 hover:text-white"
-            >
-              <Hand size={18} />
-            </button>
+          <button 
+  onMouseEnter={() => handleHover('hand')} 
+  onMouseLeave={handleMouseLeave} 
+  onClick={toggleHand} 
+  className={`flex items-center justify-center w-12 h-12 rounded-full transition-colors ${
+    isHandRaised 
+      ? 'text-yellow-600 bg-yellow-100 hover:bg-yellow-500 hover:text-white' 
+      : 'text-gray-600 hover:bg-blue-500 hover:text-white'
+  }`}
+>
+  <Hand size={18} />
+</button>
             {showToolbar === 'hand' && (
               <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 bg-white shadow-lg rounded-md px-4 py-2 whitespace-nowrap">
                 {isHandRaised ? 'Lower Hand' : 'Raise Hand'}
@@ -690,6 +674,27 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
         isOpen={isChatOpen}
         hasUnreadMessages={hasUnreadMessages}
       />
+      {role === 'interviewer' && (
+  <div className="relative group">
+    <button
+      onMouseEnter={() => handleHover('questions')}
+      onMouseLeave={handleMouseLeave}
+      onClick={() => setIsQuestionsOpen(!isQuestionsOpen)}
+      className={`flex items-center justify-center w-12 h-12 rounded-full transition-colors ${
+        isQuestionsOpen 
+          ? 'text-violet-800 bg-violet-200 hover:bg-violet-500 hover:text-white' 
+          : 'text-gray-600 hover:bg-blue-500 hover:text-white'
+      }`}
+    >
+      <HelpCircle size={18} />
+    </button>
+    {showToolbar === 'questions' && (
+      <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 bg-white shadow-lg rounded-md px-4 py-2 whitespace-nowrap">
+        {isQuestionsOpen ? 'Hide Questions' : 'Show Questions'}
+      </div>
+    )}
+  </div>
+)}
           {role !== 'interviewer' && (
             <div className="relative group">
             <button
@@ -718,6 +723,12 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
     role={role}
     onNewMessage={handleNewMessage}
   />
+  {role === 'interviewer' && (
+  <Questions 
+    isOpen={isQuestionsOpen} 
+    onClose={() => setIsQuestionsOpen(false)} 
+  />
+)}
     </div>
   );
 };
