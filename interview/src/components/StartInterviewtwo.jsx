@@ -1,6 +1,7 @@
 // src/components/StartInterviewtwo.jsx
+
 import React, { useState, useEffect } from 'react';
-import { UserX, Users, Mic, MicOff, Video, VideoOff, Volume2, VolumeX, Settings, Share2, Copy } from 'lucide-react';
+import { UserX, Users, Mic, MicOff, Video, VideoOff, Volume2, VolumeX, Settings, Share2, Copy, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import VideoChat from './VideoChat';
 
 export default function StartInterviewTwo() {
@@ -13,6 +14,11 @@ export default function StartInterviewTwo() {
   const [isAllMuted, setIsAllMuted] = useState(false);
   const [isAllVideoOff, setIsAllVideoOff] = useState(false);
   const [showCopyTooltip, setShowCopyTooltip] = useState(false);
+  const [showInterviewControls, setShowInterviewControls] = useState(false);
+
+  const toggleInterviewControls = () => {
+    setShowInterviewControls(!showInterviewControls);
+  };
 
   useEffect(() => {
     fetch('/api/get-ip')
@@ -168,6 +174,7 @@ export default function StartInterviewTwo() {
           onMediaStateChange={handleMediaStateChange}
         />
       </div>
+      {showInterviewControls && (
       <div className="w-96 bg-white border-l border-gray-200 h-full flex flex-col shadow-lg">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between mb-4">
@@ -309,7 +316,14 @@ export default function StartInterviewTwo() {
             )}
           </div>
         </div>
-      </div>
+        </div>
+      )}
+      <button
+        onClick={toggleInterviewControls}
+        className="fixed bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-colors duration-200 z-50"
+      >
+        {showInterviewControls ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+      </button>
     </div>
   );
 }
