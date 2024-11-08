@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
 import { Hand, Pin, PinOff } from 'lucide-react';
+import RecordingIndicator from './RecordingIndicator';
 
 const VideoGrid = ({
   localStream,
@@ -9,7 +11,9 @@ const VideoGrid = ({
   localUserName,
   handRaisedStates = new Map(),
   localHandRaised = false,
-  socketId
+  socketId,
+  isRecording,
+  recordingStartTime,
 }) => {
   const [pinnedParticipant, setPinnedParticipant] = useState(null);
   const totalParticipants = Object.keys(remoteStreams).length + 1;
@@ -62,7 +66,16 @@ const VideoGrid = ({
     };
   };
 
-  const VideoContainer = ({ stream, participantId, name, isLocal, isHandRaised, isPinned }) => {
+  const VideoContainer = ({
+    stream,
+    participantId,
+    name,
+    isLocal,
+    isHandRaised,
+    isPinned,
+    isRecording,
+    recordingStartTime,
+  }) => {
     const handlePinClick = () => {
       setPinnedParticipant(pinnedParticipant === participantId ? null : participantId);
     };
@@ -116,6 +129,7 @@ const VideoGrid = ({
             )}
           </div>
         </div>
+        <RecordingIndicator isRecording={isRecording} recordingStartTime={recordingStartTime} />
       </div>
     );
   };
@@ -181,14 +195,18 @@ const VideoGrid = ({
 
   return (
     <div className="w-full h-full bg-gray-900 video-grid-container" style={containerStyle}>
-      <VideoContainer
+      
+       <VideoContainer
         stream={localStream}
         participantId="local"
         name={localUserRole === 'interviewer' ? 'Interviewer' : localUserName}
         isLocal={true}
         isHandRaised={localHandRaised}
         isPinned={false}
+        isRecording={isRecording}
+        recordingStartTime={recordingStartTime}
       />
+      <RecordingIndicator isRecording={isRecording} recordingStartTime={recordingStartTime} />
       {Object.entries(remoteStreams).map(([peerId, stream]) => (
         <VideoContainer
           key={peerId}
@@ -198,8 +216,11 @@ const VideoGrid = ({
           isLocal={false}
           isHandRaised={handRaisedStates.get(peerId)}
           isPinned={false}
+          isRecording={isRecording}
+          recordingStartTime={recordingStartTime}
         />
       ))}
+      
     </div>
   );
 };
