@@ -233,7 +233,7 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
   }, [selectedParticipant]);
 
   useEffect(() => {
-    socketRef.current = io(`http://${serverIP}:3001`);
+    socketRef.current = io(`https://62.146.178.245:3001`);
 
     const initializeMedia = async () => {
       try {
