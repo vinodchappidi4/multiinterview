@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Video, Square } from 'lucide-react';
+import RecordingIndicator from './RecordingIndicator';
 
 const RecordingButton = ({ onRecordingComplete, roomId }) => {
     const [isRecording, setIsRecording] = useState(false);
@@ -9,6 +10,8 @@ const RecordingButton = ({ onRecordingComplete, roomId }) => {
     const canvasRef = useRef(null);
     const animationFrameId = useRef(null);
     const [showToolbar, setShowToolbar] = useState(null);
+    const [recordingDuration, setRecordingDuration] = useState(0);
+    const [recordingStartTime, setRecordingStartTime] = useState(null);
 
     const handleHover = (buttonType) => {
         setShowToolbar(buttonType);
@@ -115,6 +118,7 @@ const RecordingButton = ({ onRecordingComplete, roomId }) => {
             mediaRecorder.start(1000);
             setRecorder(mediaRecorder);
             setIsRecording(true);
+            setRecordingStartTime(Date.now());
             const animate = () => {
                 if (mediaRecorder.state === 'recording') {
                     drawVideoGrid(canvas, ctx);
@@ -122,19 +126,21 @@ const RecordingButton = ({ onRecordingComplete, roomId }) => {
                 }
             };
             animate();
-        } catch (error) {
+            setRecordingStartTime(Date.now());
+            setIsRecording(true);
+          } catch (error) {
             console.error('Error starting recording:', error);
             setIsRecording(false);
-        }
+          }
     };
 
     const stopRecording = () => {
         if (recorder && recorder.state === 'recording') {
-            recorder.stop();
-            setIsRecording(false);
-            setRecorder(null);
+          recorder.stop();
+          setIsRecording(false);
+          setRecordingStartTime(null);
         }
-    };
+      };
 
     const uploadRecording = async (blob) => {
         try {
@@ -169,7 +175,11 @@ const RecordingButton = ({ onRecordingComplete, roomId }) => {
                 onClick={isRecording ? stopRecording : startRecording}
                 onMouseEnter={() => handleHover('recording')}
                 onMouseLeave={handleMouseLeave}
-                className="flex items-center justify-center w-12 h-12 rounded-full transition-colors text-gray-600 hover:bg-blue-500 hover:text-white"
+                className={`flex items-center justify-center w-12 h-12 rounded-full transition-colors ${
+                    isRecording 
+                      ? 'text-red-600 bg-red-100 hover:bg-red-500 hover:text-white' 
+                      : 'text-gray-600 hover:bg-blue-500 hover:text-white'
+                  }`}
             >
                 {isRecording ? (
                     <Square size={18} />
@@ -177,6 +187,7 @@ const RecordingButton = ({ onRecordingComplete, roomId }) => {
                     <Video size={18} />
                 )}
             </button>
+            <RecordingIndicator isRecording={isRecording} recordingStartTime={recordingStartTime} />
             {showToolbar === 'recording' && (
                 <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 bg-white shadow-lg rounded-md px-4 py-2 whitespace-nowrap">
                     {isRecording ? 'Stop Recording' : 'Start Recording'}
