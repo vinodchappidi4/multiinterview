@@ -1,3 +1,4 @@
+//updated mic status at controls and grid
 
 import React, { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
@@ -29,6 +30,8 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
   const [screenStream, setScreenStream] = useState(null);
   const [showToolbar, setShowToolbar] = useState(null);
   const [isQuestionsOpen, setIsQuestionsOpen] = useState(false);
+  const [micStates, setMicStates] = useState(new Map());
+  const [initialMicStates] = useState(new Map([[socketRef.current?.id, true]]));
 
   const handleHover = (buttonType) => {
     setShowToolbar(buttonType);
@@ -212,6 +215,14 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
   useEffect(() => {
     if (role === 'interviewer' && participantControls && socketRef.current) {
       participantControls.forEach((controls, participantId) => {
+        // Update local mic states when interviewer changes controls
+        setMicStates(prev => {
+          const newStates = new Map(prev);
+          newStates.set(participantId, controls.mic);
+          return newStates;
+        });
+
+        // Emit control changes to server
         socketRef.current.emit('toggle-participant-mic', {
           participantId,
           enabled: controls.mic,
@@ -225,6 +236,37 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
       });
     }
   }, [participantControls, role, roomId]);
+
+  useEffect(() => {
+    if (!socketRef.current) return;
+
+    socketRef.current.on('toggle-mic', ({ enabled }) => {
+      if (localStream) {
+        const audioTrack = localStream.getAudioTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = enabled;
+          setIsMicOn(enabled);
+          
+          // Update local mic state
+          setMicStates(prev => new Map([...prev, [socketRef.current.id, enabled]]));
+        }
+      }
+    });
+
+    // Listen for mic toggle events from the server
+    socketRef.current.on('participant-mic-toggled', ({ participantId, enabled }) => {
+      setMicStates(prev => {
+        const newStates = new Map(prev);
+        newStates.set(participantId, enabled);
+        return newStates;
+      });
+    });
+
+    return () => {
+      socketRef.current?.off('toggle-mic');
+      socketRef.current?.off('participant-mic-toggled');
+    };
+  }, [localStream]);
 
   useEffect(() => {
     if (selectedParticipant && onRemoveParticipant) {
@@ -245,6 +287,12 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
         }
+        setMicStates(prev => new Map([...prev, [socketRef.current?.id, true]]));
+        // Emit initial mic state
+        socketRef.current?.emit('mic-state-update', {
+          roomId,
+          enabled: true
+        });
       } catch (error) {
         console.error('Error accessing media devices:', error);
       }
@@ -393,9 +441,13 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
     socket.on('existing-participants', (existingParticipants) => {
       const participantsMap = new Map(existingParticipants);
       setParticipants(participantsMap);
+      // Initialize mic states for existing participants
+      const initialMicStates = new Map();
       existingParticipants.forEach(([participantId]) => {
+        initialMicStates.set(participantId, true);
         createPeerConnection(participantId, false);
       });
+      setMicStates(prev => new Map([...prev, ...initialMicStates]));
     });
 
     socket.on('offer', async ({ offer, peerId }) => {
@@ -470,6 +522,12 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
       newStates.delete(participantId);
       return newStates;
     });
+
+    setMicStates(prev => {
+      const newStates = new Map(prev);
+      newStates.delete(participantId);
+      return newStates;
+    });
     
     setRemoteStreams(prev => {
       const newStreams = { ...prev };
@@ -510,10 +568,19 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
       audioTrack.enabled = !audioTrack.enabled;
       setIsMicOn(audioTrack.enabled);
       
-      // Emit state change to other participants
-      socketRef.current?.emit('media-state-update', {
+      // Update local mic state in micStates
+      setMicStates(prev => new Map([...prev, [socketRef.current?.id, audioTrack.enabled]]));
+      
+      // Emit mic state change to other participants
+      // socketRef.current?.emit('mic-state-update', {
+        socketRef.current?.emit('media-state-update', {
         roomId,
-        type: 'mic',
+        type:'mic',
+        enabled: audioTrack.enabled
+      });
+
+      socketRef.current?.emit('mic-state-update', {
+        roomId,
         enabled: audioTrack.enabled
       });
 
@@ -523,6 +590,25 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
       }
     }
   };
+
+
+
+  useEffect(() => {
+    if (!socketRef.current) return;
+
+    socketRef.current.on('mic-state-update', ({ participantId, enabled }) => {
+      console.log('Received mic state update:', participantId, enabled); // Debug log
+      setMicStates(prev => {
+        const newStates = new Map(prev);
+        newStates.set(participantId, enabled);
+        return newStates;
+      });
+    });
+
+    return () => {
+      socketRef.current?.off('mic-state-update');
+    };
+  }, []);
 
   useEffect(() => {
     if (!socketRef.current) return;
@@ -575,7 +661,9 @@ const VideoChat = ({ roomId, role, userName, onEndInterview, serverIP, onPartici
           localUserRole={role}
           localUserName={userName}
           handRaisedStates={handRaisedStates}
+          micStates={micStates}
           localHandRaised={isHandRaised}
+          localMicEnabled={isMicOn}
           socketId={socketRef.current?.id}
         />
       </div>
