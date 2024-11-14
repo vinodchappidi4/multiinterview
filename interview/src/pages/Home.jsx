@@ -1,6 +1,8 @@
 import React from 'react';
 import { Box, Button, Typography, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import LogoutButton from "../components/LogoutButton";
+
 
 function Home() {
   const navigate = useNavigate();
@@ -49,6 +51,7 @@ function Home() {
           </Button>
         </Box>
       </Paper>
+      <LogoutButton />
     </Box>
   );
 }
