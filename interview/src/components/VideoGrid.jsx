@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Hand, Pin, PinOff } from 'lucide-react';
+import { Hand, Pin, PinOff, MicOff } from 'lucide-react';
 import RecordingIndicator from './RecordingIndicator';
 
 const VideoGrid = ({
@@ -10,7 +9,9 @@ const VideoGrid = ({
   localUserRole,
   localUserName,
   handRaisedStates = new Map(),
+  micStates = new Map(),
   localHandRaised = false,
+  localMicEnabled = true, 
   socketId,
   isRecording,
   recordingStartTime,
@@ -72,6 +73,7 @@ const VideoGrid = ({
     name,
     isLocal,
     isHandRaised,
+    isMicEnabled,
     isPinned,
     isRecording,
     recordingStartTime,
@@ -81,19 +83,21 @@ const VideoGrid = ({
     };
 
     return (
-      <div className={`relative bg-gray-800 rounded-xl overflow-hidden shadow-lg transition-all duration-300 group
-        ${isPinned ? 'ring-2 ring-blue-500' : 'hover:ring-2 hover:ring-blue-400/50'}`}>
+      <div className={`relative bg-gray-800 rounded-xl overflow-hidden shadow-lg transition-all duration-300 group ${
+        isPinned ? 'ring-2 ring-blue-500' : 'hover:ring-2 hover:ring-blue-400/50'
+      }`}>
         <video
-          ref={el => { if (el) el.srcObject = stream; }}
+          ref={el => {
+            if (el) el.srcObject = stream;
+          }}
           autoPlay
           muted={isLocal}
           playsInline
           className="w-full h-full object-cover"
         />
-        
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
+        
         {/* Top controls */}
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
           {!isLocal && (
@@ -124,9 +128,15 @@ const VideoGrid = ({
                 )}
               </div>
             </div>
-            {isHandRaised && (
-              <Hand className="text-yellow-400 drop-shadow-glow" size={20} />
-            )}
+            <div className="flex items-center space-x-2">
+              {/* Show both hand raise and mic status icons */}
+              {isHandRaised && (
+                <Hand className="text-yellow-400 drop-shadow-glow" size={20} />
+              )}
+              {!isMicEnabled && (
+                <MicOff className="text-red-400 drop-shadow-glow" size={20} />
+              )}
+            </div>
           </div>
         </div>
         <RecordingIndicator isRecording={isRecording} recordingStartTime={recordingStartTime} />
@@ -148,6 +158,7 @@ const VideoGrid = ({
               name={localUserRole === 'interviewer' ? 'Interviewer' : localUserName}
               isLocal={true}
               isHandRaised={localHandRaised}
+              isMicEnabled={localMicEnabled}
               isPinned={true}
             />
           ) : (
@@ -157,6 +168,7 @@ const VideoGrid = ({
               name={participants.get(pinnedParticipant)}
               isLocal={false}
               isHandRaised={handRaisedStates.get(pinnedParticipant)}
+              isMicEnabled={micStates.get(pinnedParticipant)}
               isPinned={true}
             />
           )}
@@ -171,6 +183,7 @@ const VideoGrid = ({
               name={localUserRole === 'interviewer' ? 'Interviewer' : localUserName}
               isLocal={true}
               isHandRaised={localHandRaised}
+              isMicEnabled={localMicEnabled}
               isPinned={false}
             />
           )}
@@ -184,6 +197,7 @@ const VideoGrid = ({
                 name={participants.get(peerId)}
                 isLocal={false}
                 isHandRaised={handRaisedStates.get(peerId)}
+                isMicEnabled={micStates.get(peerId)}
                 isPinned={false}
               />
             );
@@ -202,6 +216,7 @@ const VideoGrid = ({
         name={localUserRole === 'interviewer' ? 'Interviewer' : localUserName}
         isLocal={true}
         isHandRaised={localHandRaised}
+        isMicEnabled={localMicEnabled}
         isPinned={false}
         isRecording={isRecording}
         recordingStartTime={recordingStartTime}
@@ -215,6 +230,7 @@ const VideoGrid = ({
           name={participants.get(peerId)}
           isLocal={false}
           isHandRaised={handRaisedStates.get(peerId)}
+          isMicEnabled={micStates.get(peerId)}
           isPinned={false}
           isRecording={isRecording}
           recordingStartTime={recordingStartTime}
